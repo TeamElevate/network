@@ -11,9 +11,13 @@
 #define PING_PORT_NUMBER 9999
 #define PING_INTERVAL    1  //  Once per second
 
-int main(void) {
-  udp_t *udp = udp_new(PING_PORT_NUMBER, NULL);
-  //uint8_t buffer[PING_MSG_SIZE];
+int main(const int argc, const char* argv[]) {
+  const char* interface = NULL;
+  if (argc > 1) {
+    interface = argv[1];
+  }
+
+  udp_t *udp = udp_new(PING_PORT_NUMBER, interface);
   struct pollfd ufds[1];
   int ret;
   time_t  t0, t1;
