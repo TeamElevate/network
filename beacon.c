@@ -6,8 +6,9 @@
 void beacon_fill(beacon_t* self, uint8_t* protocol, uint8_t version, uuid_t uuid, uint16_t port) {
   assert(self);
   assert(protocol);
+  int i;
 
-  for (int i = 0; i < 3; i++) {
+  for (i = 0; i < 3; i++) {
     self->protocol[i] = protocol[i];
   }
 
@@ -18,8 +19,9 @@ void beacon_fill(beacon_t* self, uint8_t* protocol, uint8_t version, uuid_t uuid
 
 int beacon_check(beacon_t* self, uint8_t* protocol, uint8_t version) {
   assert(self);
+  int i;
 
-  for (int i = 0; i < 3; i++) {
+  for (i = 0; i < 3; i++) {
     if (self->protocol[i] != protocol[i]) return 0;
   }
 
