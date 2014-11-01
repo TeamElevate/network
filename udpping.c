@@ -59,4 +59,5 @@ int main(void) {
 
 
   udp_destroy(&udp);
+  return 0;
 }
