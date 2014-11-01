@@ -4,6 +4,7 @@
 #include <sys/socket.h> /* socket, setsockopt */
 #include <netinet/in.h> /* sockaddr_in */
 #include <stdlib.h>     /* malloc */
+#include <string.h>     /* strcmp */
 #include <unistd.h>     /* close */
 #include "udp.h"
 
@@ -15,7 +16,7 @@ struct _udp_t {
   struct sockaddr_in broadcast;
 };
 
-udp_t* udp_new(int port_nbr) {
+udp_t* udp_new(int port_nbr, const char* interface_name) {
   udp_t* self = (udp_t*) malloc(sizeof(udp_t));
   self->port_nbr = port_nbr;
 
@@ -42,14 +43,17 @@ udp_t* udp_new(int port_nbr) {
   if (getifaddrs(&interfaces) == 0) {
     struct ifaddrs* interface = interfaces;
     while (interface) {
-      // @TODO: Don't rely on last interface being correct
       if (interface->ifa_addr->sa_family == AF_INET) {
         self->address   = *(struct sockaddr_in*) interface->ifa_addr;
         self->broadcast = *(struct sockaddr_in*) interface->ifa_broadaddr;
         self->broadcast.sin_port = htons(self->port_nbr);
+        if (interface_name && ( strcmp(interface_name, interface->ifa_name) == 0)) {
+          break;
+        }
       }
       interface = interface->ifa_next;
     }
+    assert(!interface_name || interface);
   }
   freeifaddrs(interfaces);
   return self;

@@ -7,7 +7,7 @@ typedef struct _udp_t udp_t;
 #include <sys/types.h> /* ssize_t */
 
 // Constructor
-udp_t*  udp_new(int port_nbr);
+udp_t*  udp_new(int port_nbr, const char* interface_name);
 // Destructor
 void    udp_destroy(udp_t **self_p);
 int     udp_handle(udp_t* self);
