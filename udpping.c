@@ -5,6 +5,7 @@
 
 #include "udp.h"
 #include "beacon.h"
+#include "peer.h"
 
 #define PING_MSG_SIZE 1
 #define PING_PORT_NUMBER 9999
@@ -29,6 +30,9 @@ int main(void) {
   t0 = time(NULL);
   t1 = time(NULL);
 
+  struct sockaddr_in sockaddr;
+  socklen_t si_len = sizeof(struct sockaddr_in);
+
   while (1) {
     t1 = time(NULL);
     if ((long)(t1 - t0) >= PING_INTERVAL) {
@@ -38,16 +42,15 @@ int main(void) {
     ret = poll(ufds, 1, 200);
     if (ret == -1) {
       printf("Error: poll returned -1\n");
+      break;
     } else if (ret == 0) {
       // timeout
     } else {
       if (ufds[0].revents & POLLIN) {
-        ret = udp_recv(udp, (uint8_t*)&recv, sizeof(beacon_t));
+        ret = udp_recv(udp, (uint8_t*)&recv, sizeof(beacon_t), &sockaddr, si_len);
         if (ret == sizeof(beacon_t) && beacon_check(&recv, (uint8_t*)BEACON_PROTOCOL, BEACON_VERSION)) {
           if (uuid_compare(uuid, recv.uuid) != 0) {
-            char uuid_str[40];
-            uuid_unparse(recv.uuid, uuid_str);
-            printf("Recieved Valid Beacon from %s\n", uuid_str);
+            printf("Recieved Valid Beacon\n");
           }
         }
       }

@@ -8,7 +8,7 @@ ifeq ($(UNAME_S),Linux)
 	LIBS += -luuid
 endif
 
-SOURCES = udp.c udpping.c beacon.c
+SOURCES = udp.c udpping.c beacon.c peer.c
 OBJS    = $(SOURCES:%.c=%.o)
 
 all: udpping

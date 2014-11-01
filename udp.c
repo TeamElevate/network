@@ -4,6 +4,7 @@
 #include <sys/socket.h> /* socket, setsockopt */
 #include <netinet/in.h> /* sockaddr_in */
 #include <stdlib.h>     /* malloc */
+#include <stdio.h>      /* printf */
 #include <string.h>     /* strcmp */
 #include <unistd.h>     /* close */
 #include "udp.h"
@@ -79,13 +80,11 @@ void udp_send(udp_t* self, uint8_t* buffer, size_t len) {
   assert(sendto(self->handle, buffer, len, 0, (struct sockaddr*)&self->broadcast, sizeof(struct sockaddr_in)) != -1);
 }
 
-ssize_t udp_recv(udp_t* self, uint8_t *buffer, size_t len) {
+ssize_t udp_recv(udp_t* self, uint8_t *buffer, size_t len, struct sockaddr_in* sender, socklen_t si_len) {
   assert(self);
+  assert(sender);
 
-  struct sockaddr_in sockaddr;
-  socklen_t si_len = sizeof(struct sockaddr_in);
-
-  ssize_t size = recvfrom(self->handle, buffer, len, 0, (struct sockaddr*)&sockaddr, &si_len);
+  ssize_t size = recvfrom(self->handle, buffer, len, 0, (struct sockaddr*)&sender, &si_len);
   assert(size != -1);
 
   return size;
