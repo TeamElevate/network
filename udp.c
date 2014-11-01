@@ -1,4 +1,12 @@
+#include <assert.h>     /* assert */
+#include <arpa/inet.h>  /* htons */
+#include <ifaddrs.h>    /* getifaddrs, freeifaddrs */
+#include <sys/socket.h> /* socket, setsockopt */
+#include <netinet/in.h> /* sockaddr_in */
+#include <stdlib.h>     /* malloc */
+#include <unistd.h>     /* close */
 #include "udp.h"
+
 
 struct _udp_t {
   int handle;
@@ -25,10 +33,10 @@ udp_t* udp_new(int port_nbr) {
 
   struct sockaddr_in sockaddr = { 0 };
   sockaddr.sin_family = AF_INET;
-  sockaddr.sin_port   = htons(self->portnbr);
+  sockaddr.sin_port   = htons(self->port_nbr);
   sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  assert(bind(self->handle, &sockaddr, sizeof(sockaddr)) != -1);
+  assert(bind(self->handle, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) != -1);
 
   struct ifaddrs* interfaces;
   if (getifaddrs(&interfaces) == 0) {
@@ -62,18 +70,18 @@ int udp_handle(udp_t* self) {
   return self->handle;
 }
 
-void udp_send(udp_t* self, uint8_t buffer, size_t len) {
+void udp_send(udp_t* self, uint8_t* buffer, size_t len) {
   assert(self);
-  assert(sendto(self->handle, buffer, len, 0, &self->broadcast, sizeof(struct sockaddr_in)) != -1);
+  assert(sendto(self->handle, buffer, len, 0, (struct sockaddr*)&self->broadcast, sizeof(struct sockaddr_in)) != -1);
 }
 
-ssize_t udp_recv(udp_t* self, uint8_t buffer, size_t len) {
+ssize_t udp_recv(udp_t* self, uint8_t *buffer, size_t len) {
   assert(self);
 
   struct sockaddr_in sockaddr;
   socklen_t si_len = sizeof(struct sockaddr_in);
 
-  ssize_t size = recvfrom(self->handle, buffer, length, 0, &sockaddr, &si_len);
+  ssize_t size = recvfrom(self->handle, buffer, len, 0, (struct sockaddr*)&sockaddr, &si_len);
   assert(size != -1);
 
   return size;
