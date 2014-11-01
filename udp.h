@@ -1,10 +1,11 @@
 #ifndef __ELEVATE_UDP__
 #define __ELEVATE_UDP__
-typedef struct _udp_t udp_t;
-
 #include <stddef.h>    /* size_t */
 #include <stdint.h>    /* uint8_t */
 #include <sys/types.h> /* ssize_t */
+
+typedef struct _udp_t udp_t;
+
 
 // Constructor
 udp_t*  udp_new(int port_nbr, const char* interface_name);

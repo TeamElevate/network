@@ -3,6 +3,7 @@
 #include <time.h>
 
 #include "udp.h"
+#include "beacon.h"
 
 #define PING_MSG_SIZE 1
 #define PING_PORT_NUMBER 9999
@@ -10,12 +11,16 @@
 
 int main(void) {
   udp_t *udp = udp_new(PING_PORT_NUMBER, NULL);
-  uint8_t buffer[PING_MSG_SIZE];
+  //uint8_t buffer[PING_MSG_SIZE];
   struct pollfd ufds[1];
   int ret;
   time_t  t0, t1;
+  beacon_t beacon;
+  uuid_t uuid;
+  beacon_t recv;
 
-  buffer[0] = '!';
+  uuid_generate(uuid);
+  beacon_fill(&beacon, (uint8_t*)BEACON_PROTOCOL, BEACON_VERSION, uuid, htons(47473));
 
   ufds[0].fd = udp_handle(udp);
   ufds[0].events = POLLIN;
@@ -23,12 +28,10 @@ int main(void) {
   t0 = time(NULL);
   t1 = time(NULL);
 
-  udp_send(udp, buffer, PING_MSG_SIZE);
-  udp_send(udp, buffer, PING_MSG_SIZE);
   while (1) {
     t1 = time(NULL);
     if ((long)(t1 - t0) >= PING_INTERVAL) {
-      udp_send(udp, buffer, PING_MSG_SIZE);
+      udp_send(udp, (uint8_t*)(&beacon), sizeof(beacon_t));
       t0 = time(NULL);
     }
     ret = poll(ufds, 1, 200);
@@ -38,10 +41,14 @@ int main(void) {
       // timeout
     } else {
       if (ufds[0].revents & POLLIN) {
-        udp_recv(udp, buffer, PING_MSG_SIZE);
-        printf("Recieved: %c\n", buffer[0]);
-      } else {
-        printf("Something else\n");
+        ret = udp_recv(udp, (uint8_t*)&recv, sizeof(beacon_t));
+        if (ret == sizeof(beacon_t) && beacon_check(&recv, (uint8_t*)BEACON_PROTOCOL, BEACON_VERSION)) {
+          if (uuid_compare(uuid, recv.uuid) != 0) {
+            char uuid_str[40];
+            uuid_unparse(recv.uuid, uuid_str);
+            printf("Recieved Valid Beacon from %s\n", uuid_str);
+          }
+        }
       }
     }
   }

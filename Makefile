@@ -1,9 +1,9 @@
 CC      := gcc
-CFLAGS  := -Wall -Werror
+CFLAGS  := -Wall -Werror -g
 LDFLAGS := 
 LIBS    :=
 
-SOURCES = udp.c udpping.c
+SOURCES = udp.c udpping.c beacon.c
 OBJS    = $(SOURCES:%.c=%.o)
 
 all: $(OBJS)
