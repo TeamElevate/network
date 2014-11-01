@@ -11,8 +11,10 @@ endif
 SOURCES = udp.c udpping.c beacon.c
 OBJS    = $(SOURCES:%.c=%.o)
 
-all: $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o udpping $^ $(LIBS)
+all: udpping
+
+udpping: $(OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
