@@ -1,3 +1,21 @@
+# Produced by autoconf
+/configure
+/autom4te.cache/
+/Makefile
+/Makefile.in
+/aclocal.m4
+/config.*
+/m4/
+/stamp-h?
+.deps/
+COPYING
+INSTALL
+compile
+depcomp
+install-sh
+missing
+
+
 *.swp
 *.o
 
