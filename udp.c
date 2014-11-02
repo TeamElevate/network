@@ -70,12 +70,12 @@ void udp_destroy(udp_t** self_p) {
   }
 }
 
-int udp_handle(udp_t* self) {
+int udp_handle(const udp_t* self) {
   assert(self);
   return self->handle;
 }
 
-void udp_send(udp_t* self, uint8_t* buffer, size_t len) {
+void udp_send(udp_t* self, const uint8_t* buffer, size_t len) {
   assert(self);
   assert(sendto(self->handle, buffer, len, 0, (struct sockaddr*)&self->broadcast, sizeof(struct sockaddr_in)) != -1);
 }
@@ -84,7 +84,7 @@ ssize_t udp_recv(udp_t* self, uint8_t *buffer, size_t len, struct sockaddr_in* s
   assert(self);
   assert(sender);
 
-  ssize_t size = recvfrom(self->handle, buffer, len, 0, (struct sockaddr*)&sender, &si_len);
+  ssize_t size = recvfrom(self->handle, buffer, len, 0, (struct sockaddr*)sender, &si_len);
   assert(size != -1);
 
   return size;
