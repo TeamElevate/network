@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <assert.h>
 #include <stdio.h>
 #include <sys/poll.h>
 #include <time.h>
@@ -21,6 +22,8 @@ int main(const int argc, const char* argv[]) {
   }
 
   udp_t *udp = udp_new(PING_PORT_NUMBER, interface);
+  assert(udp);
+
   struct pollfd ufds[1];
   int ret;
   time_t  t0, t1;
@@ -44,7 +47,8 @@ int main(const int argc, const char* argv[]) {
   while (1) {
     t1 = time(NULL);
     if ((long)(t1 - t0) >= PING_INTERVAL) {
-      udp_send(udp, (uint8_t*)(&beacon), sizeof(beacon_t));
+      ret = udp_send(udp, (uint8_t*)(&beacon), sizeof(beacon_t));
+      assert(ret == sizeof(beacon_t));
       t0 = time(NULL);
     }
     ret = poll(ufds, 1, 200);

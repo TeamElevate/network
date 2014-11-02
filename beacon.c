@@ -19,6 +19,7 @@ void beacon_fill(beacon_t* self, uint8_t* protocol, uint8_t version, uuid_t uuid
 
 int beacon_check(beacon_t* self, uint8_t* protocol, uint8_t version) {
   assert(self);
+  assert(protocol);
   int i;
 
   for (i = 0; i < 3; i++) {

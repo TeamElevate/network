@@ -4,7 +4,7 @@
 #include <uuid/uuid.h>  /* uuid_t */
 typedef struct _peer_t peer_t;
 
-peer_t* peer_new(uuid_t uuid, const char* ip, int port);
+peer_t* peer_new(const uuid_t uuid, const char* ip, int port);
 void    peer_destroy(peer_t** self_p);
 
 const char* peer_ip(const peer_t* self);

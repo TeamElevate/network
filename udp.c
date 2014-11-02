@@ -18,27 +18,32 @@ struct _udp_t {
 };
 
 udp_t* udp_new(int port_nbr, const char* interface_name) {
+  int ret;
   udp_t* self = (udp_t*) malloc(sizeof(udp_t));
   self->port_nbr = port_nbr;
 
   // Create udp socket
   self->handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-  assert(self->handle > 0);
+  if (self->handle <= 0) return NULL;
 
   // Set up socket for broadcast
   int on = 1;
-  assert(setsockopt(self->handle, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on)) != -1);
+  ret = setsockopt(self->handle, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on));
+  if (ret == -1) goto fail;
 
   // Allow multiple processes to bind to socket
   // incoming messages will go to each process
-  assert(setsockopt(self->handle, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) != -1);
+  ret = setsockopt(self->handle, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+  if (ret == -1) goto fail;
 
   struct sockaddr_in sockaddr = { 0 };
   sockaddr.sin_family = AF_INET;
   sockaddr.sin_port   = htons(self->port_nbr);
   sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  assert(bind(self->handle, (struct sockaddr*)&sockaddr, sizeof(sockaddr)) != -1);
+  // Bind to sockaddr
+  ret = bind(self->handle, (struct sockaddr*)&sockaddr, sizeof(sockaddr));
+  if (ret == -1) goto fail;
 
   struct ifaddrs* interfaces;
   if (getifaddrs(&interfaces) == 0) {
@@ -54,10 +59,17 @@ udp_t* udp_new(int port_nbr, const char* interface_name) {
       }
       interface = interface->ifa_next;
     }
-    assert(!interface_name || interface);
+    if (interface_name && !interface) {
+      freeifaddrs(interfaces);
+      goto fail;
+    }
   }
   freeifaddrs(interfaces);
   return self;
+
+fail:
+  close(self->handle);
+  return NULL;
 }
 
 void udp_destroy(udp_t** self_p) {
@@ -75,9 +87,12 @@ int udp_handle(const udp_t* self) {
   return self->handle;
 }
 
-void udp_send(udp_t* self, const uint8_t* buffer, size_t len) {
+int udp_send(udp_t* self, const uint8_t* buffer, size_t len) {
+  int ret;
+
   assert(self);
-  assert(sendto(self->handle, buffer, len, 0, (struct sockaddr*)&self->broadcast, sizeof(struct sockaddr_in)) != -1);
+  ret = sendto(self->handle, buffer, len, 0, (struct sockaddr*)&self->broadcast, sizeof(struct sockaddr_in));
+  return ret;
 }
 
 ssize_t udp_recv(udp_t* self, uint8_t *buffer, size_t len, struct sockaddr_in* sender, socklen_t si_len) {
@@ -85,7 +100,6 @@ ssize_t udp_recv(udp_t* self, uint8_t *buffer, size_t len, struct sockaddr_in* s
   assert(sender);
 
   ssize_t size = recvfrom(self->handle, buffer, len, 0, (struct sockaddr*)sender, &si_len);
-  assert(size != -1);
 
   return size;
 }

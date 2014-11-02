@@ -14,7 +14,9 @@ struct _peer_t {
   int  port;
 };
 
-peer_t* peer_new(uuid_t uuid, const char* ip, int port) {
+peer_t* peer_new(const uuid_t uuid, const char* ip, int port) {
+  assert(ip);
+
   peer_t* self = (peer_t*)malloc(sizeof(peer_t));
   self->port = port;
   // @TODO: NOT SAFE
