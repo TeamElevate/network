@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <assert.h>
+#include <ifaddrs.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -56,14 +57,32 @@ void discovery_destroy(discovery_t** self_p) {
 void discovery_start(discovery_t* self) {
   assert(self);
 
-  pthread_create(&self->thread, NULL, run_discovery, &self->opts);
   self->started = 1;
+  pthread_create(&self->thread, NULL, run_discovery, &self->opts);
 }
 
 void discovery_stop(discovery_t* self) {
   assert(self);
 
   pthread_cancel(self->thread);
+}
+
+int find_my_ip(struct in_addr* addr) {
+  struct ifaddrs* interfaces;
+  int found = -1;
+  if (getifaddrs(&interfaces) != 0) return -1;
+
+  struct ifaddrs* interface = interfaces;
+
+  while (interface) {
+    if (interface->ifa_addr->sa_family == AF_INET) {
+      *addr = ((struct sockaddr_in*)(interface->ifa_addr))->sin_addr;
+      found = 0;
+    }
+    interface = interface->ifa_next;
+  }
+  freeifaddrs(interfaces);
+  return found;
 }
 
 static void* run_discovery(void* data) {
@@ -81,9 +100,12 @@ static void* run_discovery(void* data) {
   uuid_t uuid;
   beacon_t recv;
   peers_t* peers = peers_new();
+  struct in_addr addr;
+
+  find_my_ip(&addr);
 
   uuid_generate(uuid);
-  beacon_fill(&beacon, (uint8_t*)BEACON_PROTOCOL, BEACON_VERSION, uuid, htons(47473));
+  beacon_fill(&beacon, (uint8_t*)BEACON_PROTOCOL, BEACON_VERSION, uuid, addr, htons(47473));
 
   ufds[0].fd = udp_handle(udp);
   ufds[0].events = POLLIN;

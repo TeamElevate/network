@@ -3,7 +3,8 @@
 
 #include "beacon.h"
 
-void beacon_fill(beacon_t* self, uint8_t* protocol, uint8_t version, uuid_t uuid, uint16_t port) {
+void beacon_fill(beacon_t* self, const uint8_t* protocol, uint8_t version, const uuid_t uuid, const struct in_addr addr,
+uint16_t port) {
   assert(self);
   assert(protocol);
   int i;
@@ -14,10 +15,11 @@ void beacon_fill(beacon_t* self, uint8_t* protocol, uint8_t version, uuid_t uuid
 
   self->version = version;
   memcpy(self->uuid, uuid, sizeof(uuid_t));
+  self->addr = addr;
   self->port = port;
 }
 
-int beacon_check(beacon_t* self, uint8_t* protocol, uint8_t version) {
+int beacon_check(const beacon_t* self, const uint8_t* protocol, uint8_t version) {
   assert(self);
   assert(protocol);
   int i;

@@ -17,6 +17,7 @@ AC_PROG_CC
 AC_CHECK_LIB([pthread], [pthread_create])
 # FIXME: Replace `main' with a function in `-luuid':
 AC_CHECK_LIB([uuid], [uuid_generate])
+AC_CHECK_LIB([bluetooth], [hci_open_dev])
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h inttypes.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/socket.h unistd.h])
