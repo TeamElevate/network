@@ -3,6 +3,7 @@
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_lib.h>
 #include <errno.h>
+#include <poll.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <uuid/uuid.h>
@@ -20,6 +21,7 @@ int main(int argc, const char* argv[]) {
   char uuid_str[2048];
 
   fd_set rfds;
+  struct pollfd ufds[1];
   struct timeval tv;
   int selectRetval;
 
@@ -53,26 +55,25 @@ int main(int argc, const char* argv[]) {
   ret = btle_set_adv_data(btle, &beacon, sizeof(beacon));
   assert(ret == 0);
 
-  //turn on le advertise
+  // turn on le advertise
   ret = btle_start_adv(btle);
+  // turn on le scan
   ret = btle_start_scan(btle);
 
+  // Setup Poll
+  ufds[0].fd = btle_sock(btle);
+  ufds[0].events = POLLIN;
+
   while (1) {
-    FD_ZERO(&rfds);
-    FD_SET(btle_sock(btle), &rfds);
-
-    tv.tv_sec = 1;
-    tv.tv_usec = 0;
-
     currentAdapterState = btle_dev_is_up(btle);
     if (!currentAdapterState) {
       printf("Powered Off\n");
       break;
     }
 
-    selectRetval = select(btle_sock(btle) + 1, &rfds, NULL, NULL, &tv);
+    ret = poll(ufds, 1, 200);
 
-    if (selectRetval >= 1) {
+    if (ufds[0].revents & POLLIN) {
       hciEventLen = read(btle_sock(btle), hciEventBuf, sizeof(hciEventBuf));
       leMetaEvent = (evt_le_meta_event *)(hciEventBuf + (1 + HCI_EVENT_HDR_SIZE));
       hciEventLen -= (1 + HCI_EVENT_HDR_SIZE);
@@ -88,8 +89,6 @@ int main(int argc, const char* argv[]) {
         printf("Found Peer: %s\n", uuid_str);
       }
     }
-    
-
   }
   btle_destroy(&btle);
 }
