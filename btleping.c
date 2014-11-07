@@ -31,8 +31,12 @@ int main(int argc, const char* argv[]) {
   beacon_t beacon;
   uuid_t uuid;
   struct in_addr addr;
-  
-  find_my_ip(&addr);
+  const char* interface = NULL;
+ 
+  if (argc > 1) {
+    interface = argv[1];
+  }
+  find_my_ip(&addr, interface);
 
   uuid_generate(uuid);
   beacon_fill(&beacon, BEACON_PROTOCOL, BEACON_VERSION, uuid, addr, 13377);
