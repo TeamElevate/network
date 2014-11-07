@@ -67,7 +67,7 @@ void discovery_stop(discovery_t* self) {
   pthread_cancel(self->thread);
 }
 
-int find_my_ip(struct in_addr* addr) {
+int find_my_ip(struct in_addr* addr, const char* interface_name) {
   struct ifaddrs* interfaces;
   int found = -1;
   if (getifaddrs(&interfaces) != 0) return -1;
@@ -75,9 +75,12 @@ int find_my_ip(struct in_addr* addr) {
   struct ifaddrs* interface = interfaces;
 
   while (interface) {
-    if (interface->ifa_addr->sa_family == AF_INET) {
-      *addr = ((struct sockaddr_in*)(interface->ifa_addr))->sin_addr;
-      found = 0;
+    if (!interface_name || (strcmp(interface->ifa_name, interface_name) == 0)) {
+      if (interface->ifa_addr->sa_family == AF_INET) {
+        *addr = ((struct sockaddr_in*)(interface->ifa_addr))->sin_addr;
+        found = 0;
+        if (interface_name) break;
+      }
     }
     interface = interface->ifa_next;
   }
@@ -102,7 +105,7 @@ static void* run_discovery(void* data) {
   peers_t* peers = peers_new();
   struct in_addr addr;
 
-  find_my_ip(&addr);
+  find_my_ip(&addr, NULL);
 
   uuid_generate(uuid);
   beacon_fill(&beacon, (uint8_t*)BEACON_PROTOCOL, BEACON_VERSION, uuid, addr, htons(47473));

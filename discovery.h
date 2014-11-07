@@ -10,5 +10,5 @@ void discovery_destroy(discovery_t** self_p);
 void discovery_start(discovery_t* self);
 void discovery_stop(discovery_t* self);
 
-int  find_my_ip(struct in_addr* addr);
+int  find_my_ip(struct in_addr* addr, const char* interface_name);
 #endif
