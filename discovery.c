@@ -11,6 +11,7 @@
 #include "beacon.h"
 #include "peer.h"
 #include "peers.h"
+#include "network.h"
 
 #include "discovery.h"
 
@@ -65,27 +66,6 @@ void discovery_stop(discovery_t* self) {
   assert(self);
 
   pthread_cancel(self->thread);
-}
-
-int find_my_ip(struct in_addr* addr, const char* interface_name) {
-  struct ifaddrs* interfaces;
-  int found = -1;
-  if (getifaddrs(&interfaces) != 0) return -1;
-
-  struct ifaddrs* interface = interfaces;
-
-  while (interface) {
-    if (!interface_name || (strcmp(interface->ifa_name, interface_name) == 0)) {
-      if (interface->ifa_addr->sa_family == AF_INET) {
-        *addr = ((struct sockaddr_in*)(interface->ifa_addr))->sin_addr;
-        found = 0;
-        if (interface_name) break;
-      }
-    }
-    interface = interface->ifa_next;
-  }
-  freeifaddrs(interfaces);
-  return found;
 }
 
 static void* run_discovery(void* data) {

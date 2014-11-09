@@ -12,25 +12,47 @@ struct _btle_t {
   int hci_sock;
 };
 
-static int btle_set_adv_params(btle_t* self) {
+static int btle_set_adv_params(btle_t* self, uint8_t* status) {
+	struct hci_request rq;
   le_set_advertising_parameters_cp params;
-  /* Time = 0.625 * N */
-  const uint16_t FOUR_SECS = 0x1900;
-  const uint16_t FIVE_SECS = 0x1F40;
+  int ret;
+
+  /* Time (in ms) = 0.625 * N */
+  /* We choose N */
+  /* N = Time (in ms) * 1.6 */
+  const uint16_t HALF_SEC = 500 * 1.6;
+  const uint16_t ONE_SEC  = 1000 * 1.6;
+
   /* Not connectable, indirect advertisment */
-  const uint8_t  ADV_NONCONN_IND = 0x03;
+  const uint8_t  ADV_NONCONN_IND  = 0x03;
+
+  /* Use all advertisement channels */
+  const uint8_t  ALL_ADV_CHANNELS = 0x7;
 
   memset(&params, 0, sizeof(params));
 
-  params.min_interval = htobs(FOUR_SECS);
-  params.max_interval = htobs(FIVE_SECS);
+  params.min_interval = htobs(HALF_SEC);
+  params.max_interval = htobs(ONE_SEC);
   params.advtype = ADV_NONCONN_IND;
+	params.chan_map = ALL_ADV_CHANNELS;
 
-  return hci_send_cmd(self->hci_sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_PARAMETERS, sizeof(params), &params);
+	memset(&rq, 0, sizeof(rq));
+	rq.ogf = OGF_LE_CTL;
+	rq.ocf = OCF_LE_SET_ADVERTISING_PARAMETERS;
+	rq.cparam = &params;
+	rq.clen = LE_SET_ADVERTISING_PARAMETERS_CP_SIZE;
+	rq.rparam = status;
+	rq.rlen = 1;
+
+	ret = hci_send_req(self->hci_sock, &rq, 1000);
+
+  return ret;
 }
 
 btle_t* btle_new() {
   btle_t* self = malloc(sizeof(btle_t));
+  if (!self) return NULL;
+
   self->hci_dev_id = hci_get_route(NULL);
   if (self->hci_dev_id < 0) {
     free(self);
@@ -91,14 +113,33 @@ int btle_set_adv_data(btle_t* self, void* buf, size_t len) {
 }
 
 int btle_start_adv(btle_t* self) {
+	struct hci_request rq;
+	le_set_advertise_enable_cp advertise_cp;
+	uint8_t status;
   int ret;
-  ret = btle_set_adv_params(self);
+
+  ret = btle_set_adv_params(self, &status);
   if (ret < 0) return -1;
 
-  return hci_le_set_advertise_enable(self->hci_sock, 1, 1000);
+	memset(&advertise_cp, 0, sizeof(advertise_cp));
+	advertise_cp.enable = 0x01;
+	memset(&rq, 0, sizeof(rq));
+	rq.ogf = OGF_LE_CTL;
+	rq.ocf = OCF_LE_SET_ADVERTISE_ENABLE;
+	rq.cparam = &advertise_cp;
+	rq.clen = LE_SET_ADVERTISE_ENABLE_CP_SIZE;
+	rq.rparam = &status;
+	rq.rlen = 1;
+
+	ret = hci_send_req(self->hci_sock, &rq, 1000);
+
+  return ret;
 }
 
 int btle_stop_adv(btle_t* self) {
+  //@TODO: Actually check if stopped
+  btle_start_adv(self);
+
   return hci_le_set_advertise_enable(self->hci_sock, 0, 1000);
 }
 

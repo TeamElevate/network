@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <assert.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
@@ -8,9 +9,8 @@
 #include <sys/socket.h>
 #include <uuid/uuid.h>
 
-#include "btle.h"
 #include "beacon.h"
-#include "discovery.h"
+#include "btle.h"
 
 int main(int argc, const char* argv[]) {
   int i;
@@ -18,7 +18,7 @@ int main(int argc, const char* argv[]) {
   int currentAdapterState;
   evt_le_meta_event *leMetaEvent;
   le_advertising_info *leAdvertisingInfo;
-  char uuid_str[2048];
+  char addr_str[INET_ADDRSTRLEN];
 
   fd_set rfds;
   struct pollfd ufds[1];
@@ -30,19 +30,6 @@ int main(int argc, const char* argv[]) {
 
   int ret;
 
-  beacon_t beacon;
-  uuid_t uuid;
-  struct in_addr addr;
-  const char* interface = NULL;
- 
-  if (argc > 1) {
-    interface = argv[1];
-  }
-  find_my_ip(&addr, interface);
-
-  uuid_generate(uuid);
-  beacon_fill(&beacon, BEACON_PROTOCOL, BEACON_VERSION, uuid, addr, 13377);
-
   btle_t* btle = btle_new();
   if (!btle) {
     printf("Error: Could not init btle\n");
@@ -51,14 +38,6 @@ int main(int argc, const char* argv[]) {
 
   ret = btle_set_filter(btle);
   assert(ret == 0);
-
-  ret = btle_set_adv_data(btle, &beacon, sizeof(beacon));
-  assert(ret == 0);
-
-  // turn on le advertise
-  ret = btle_start_adv(btle);
-  // turn on le scan
-  ret = btle_start_scan(btle);
 
   // Setup Poll
   ufds[0].fd = btle_sock(btle);
@@ -85,10 +64,11 @@ int main(int argc, const char* argv[]) {
 
       if (memcmp(BEACON_PROTOCOL, leAdvertisingInfo->data, 3) == 0) {
         beacon_t* peer = (beacon_t*)leAdvertisingInfo->data;
-        inet_ntop(AF_INET, &peer->addr, uuid_str);
-        printf("Found Peer: %s\n", uuid_str);
+        inet_ntop(AF_INET, &peer->addr, addr_str, INET_ADDRSTRLEN);
+        printf("Found Peer: %s\n", addr_str);
       }
     }
   }
   btle_destroy(&btle);
+  return 0;
 }
