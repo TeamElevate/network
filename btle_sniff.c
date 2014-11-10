@@ -39,6 +39,8 @@ int main(int argc, const char* argv[]) {
   ret = btle_set_filter(btle);
   assert(ret == 0);
 
+  ret = btle_start_scan(btle);
+
   // Setup Poll
   ufds[0].fd = btle_sock(btle);
   ufds[0].events = POLLIN;
@@ -69,6 +71,7 @@ int main(int argc, const char* argv[]) {
       }
     }
   }
+  btle_stop_scan(btle);
   btle_destroy(&btle);
   return 0;
 }
