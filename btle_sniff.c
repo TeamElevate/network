@@ -20,10 +20,7 @@ int main(int argc, const char* argv[]) {
   le_advertising_info *leAdvertisingInfo;
   char addr_str[INET_ADDRSTRLEN];
 
-  fd_set rfds;
   struct pollfd ufds[1];
-  struct timeval tv;
-  int selectRetval;
 
   unsigned char hciEventBuf[HCI_MAX_EVENT_SIZE];
   int hciEventLen;
@@ -48,7 +45,7 @@ int main(int argc, const char* argv[]) {
   while (1) {
     currentAdapterState = btle_dev_is_up(btle);
     if (!currentAdapterState) {
-      printf("Powered Off\n");
+      printf("Lost Bluetooth Adapter\n");
       break;
     }
 
