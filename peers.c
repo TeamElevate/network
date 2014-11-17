@@ -1,5 +1,6 @@
 #include <assert.h> /* assert */
 #include <stdlib.h> /* malloc */
+#include <stdio.h>  /* fprintf, FILE */
 
 #include "peers.h"
 
@@ -76,4 +77,15 @@ void peers_check(peers_t* self) {
       i = -1;
     }
   }
+}
+
+void peers_print(peers_t* self, FILE* stream) {
+  int i;
+  for (i = 0; i < self->num_peers; i++) {
+    fprintf(stream, "%s:%d\n", peer_ip(self->peers[i]), peer_port(self->peers[i]));
+  }
+}
+
+int  peers_size(peers_t* self) {
+  return self->num_peers;
 }
