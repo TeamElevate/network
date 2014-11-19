@@ -69,14 +69,17 @@ peer_t* peers_remove(peers_t* self, const uuid_t uuid) {
   return victim;
 }
 
-void peers_check(peers_t* self) {
+int peers_check(peers_t* self) {
+  int count = 0;
   int i;
   for (i = 0; i < self->num_peers; i++) {
     if (is_peer_missing(self->peers[i])) {
       peers_remove(self, peer_uuid(self->peers[i]));
       i = -1;
+      count++;
     }
   }
+  return count;
 }
 
 void peers_print(peers_t* self, FILE* stream) {
