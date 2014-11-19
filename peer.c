@@ -5,7 +5,7 @@
 
 #include "peer.h"
 
-static const long SECONDS_TILL_MISSING = 3;
+static const long SECONDS_TILL_MISSING = 5;
 
 struct _peer_t {
   uuid_t   uuid;
