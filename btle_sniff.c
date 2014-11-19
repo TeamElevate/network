@@ -18,6 +18,7 @@
 int main(int argc, const char* argv[]) {
   FILE* fp;
   int i;
+  int updated;
 
   int currentAdapterState;
   evt_le_meta_event *leMetaEvent;
@@ -53,6 +54,7 @@ int main(int argc, const char* argv[]) {
   ufds[0].events = POLLIN;
 
   while (1) {
+    updated = 0;
     currentAdapterState = btle_dev_is_up(btle);
     if (!currentAdapterState) {
       printf("Lost Bluetooth Adapter\n");
@@ -78,16 +80,16 @@ int main(int argc, const char* argv[]) {
         if (!peers_exist(peers, beacon->uuid)) {
           peers_add(peers, peer);
           peer_is_alive(peer);
+          updated = 1;
         } else {
           peer_is_alive(peer);
           peer_destroy(&peer);
         }
       }
     }
-    peers_check(peers);
-    if (peers_size(peers) > 0) {
-
-      fp = fopen(argv[1], "w+");
+    rc = peers_check(peers);
+    if ((rc > 0) || (updated)) {
+      fp = fopen(argv[1], "w");
       rc = flock(fileno(fp), LOCK_EX);
       peers_print(peers, fp);
       rc = flock(fileno(fp), LOCK_UN);
