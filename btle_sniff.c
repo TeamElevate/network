@@ -7,6 +7,8 @@
 #include <sys/file.h>
 #include <poll.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
 #include <sys/socket.h>
 #include <uuid/uuid.h>
 
@@ -14,6 +16,38 @@
 #include "btle.h"
 #include "peer.h"
 #include "peers.h"
+
+volatile sig_atomic_t keep_running;
+
+void intHandler(int sig) {
+  struct sigaction sa;
+  sa.sa_handler = SIG_DFL;
+  sa.sa_flags = 0;
+  sigemptyset(&sa.sa_mask);
+  keep_running = 0;
+
+  sigaction(sig, &sa, NULL);
+}
+
+void set_handlers() {
+  struct sigaction sa;
+  sa.sa_handler = intHandler;
+  sa.sa_flags = 0;
+  sigemptyset(&sa.sa_mask);
+
+  if (sigaction(SIGINT, &sa, NULL) == -1) {
+    printf("ERROR: Could not set signal handler\n");
+    exit(-1);
+  }
+  if (sigaction(SIGTERM, &sa, NULL) == -1) {
+    printf("ERROR: Could not set signal handler\n");
+    exit(-1);
+  }
+  if (sigaction(SIGHUP, &sa, NULL) == -1) {
+    printf("ERROR: Could not set signal handler\n");
+    exit(-1);
+  }
+}
 
 int main(int argc, const char* argv[]) {
   FILE* fp;
@@ -53,7 +87,10 @@ int main(int argc, const char* argv[]) {
   ufds[0].fd = btle_sock(btle);
   ufds[0].events = POLLIN;
 
-  while (1) {
+  keep_running = 1;
+  set_handlers();
+
+  while (keep_running) {
     updated = 0;
     currentAdapterState = btle_dev_is_up(btle);
     if (!currentAdapterState) {
