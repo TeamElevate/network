@@ -98,7 +98,7 @@ int main(int argc, const char* argv[]) {
       break;
     }
 
-    rc = poll(ufds, 1, 200);
+    rc = poll(ufds, 1, 2000);
 
     if (ufds[0].revents & POLLIN) {
       hciEventLen = read(btle_sock(btle), hciEventBuf, sizeof(hciEventBuf));
