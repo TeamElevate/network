@@ -79,9 +79,16 @@ int main(int argc, const char* argv[]) {
   }
 
   rc = btle_set_filter(btle);
-  assert(rc == 0);
+  if (rc != 0) {
+    printf("Error: Could not set scan filter\n");
+    return -1;
+  }
 
   rc = btle_start_scan(btle);
+  if (rc != 0) {
+    printf("Error: Could not start btle scan\n");
+    return -1;
+  }
 
   // Setup Poll
   ufds[0].fd = btle_sock(btle);
@@ -117,6 +124,7 @@ int main(int argc, const char* argv[]) {
         if (!peers_exist(peers, beacon->uuid)) {
           peers_add(peers, peer);
           peer_is_alive(peer);
+          printf("Found Peer: %s\n", addr_str);
           updated = 1;
         } else {
           peer_is_alive(peer);
