@@ -5,7 +5,7 @@
 
 #include "peer.h"
 
-static const long SECONDS_TILL_MISSING = 5;
+static const long SECONDS_TILL_MISSING = 1;
 
 struct _peer_t {
   uuid_t   uuid;
@@ -19,7 +19,6 @@ peer_t* peer_new(const uuid_t uuid, const char* ip, int port) {
 
   peer_t* self = (peer_t*)malloc(sizeof(peer_t));
   self->port = port;
-  // @TODO: NOT SAFE
   strcpy(self->ip, ip);
   memcpy(self->uuid, uuid, sizeof(uuid_t));
   return self;
