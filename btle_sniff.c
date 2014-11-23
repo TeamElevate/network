@@ -58,6 +58,7 @@ int main(int argc, const char* argv[]) {
   evt_le_meta_event *leMetaEvent;
   le_advertising_info *leAdvertisingInfo;
   char addr_str[INET_ADDRSTRLEN];
+  peer_t* p;
 
   struct pollfd ufds[1];
 
@@ -121,19 +122,18 @@ int main(int argc, const char* argv[]) {
         beacon_t* beacon = (beacon_t*)leAdvertisingInfo->data;
         inet_ntop(AF_INET, &beacon->addr, addr_str, INET_ADDRSTRLEN);
         peer_t* peer = peer_new(beacon->uuid, addr_str, beacon->port);
-        if (!peers_exist(peers, beacon->uuid)) {
+        if (!(p = peers_exist(peers, beacon->uuid))) {
           peers_add(peers, peer);
           peer_is_alive(peer);
           printf("Found Peer: %s\n", addr_str);
           updated = 1;
         } else {
-          peer_is_alive(peer);
+          peer_is_alive(p);
           peer_destroy(&peer);
         }
       }
     }
-    rc = peers_check(peers);
-    if ((rc > 0) || (updated)) {
+    if (updated) {
       fp = fopen(argv[1], "w");
       rc = flock(fileno(fp), LOCK_EX);
       peers_print(peers, fp);
