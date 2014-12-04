@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "btle.h"
 #include "beacon.h"
@@ -65,8 +67,9 @@ int main(const int argc, char* const * argv) {
  
   if (start) {
 
-    while ( find_my_ip(&addr, interface) <= 0)
-      ;
+    if (find_my_ip(&addr, interface) <= 0) {
+      inet_pton(AF_INET, "127.0.0.1", &addr);
+    }
 
     uuid_generate(uuid);
     beacon_fill(&beacon, BEACON_PROTOCOL, BEACON_VERSION, uuid, addr, 13377);
