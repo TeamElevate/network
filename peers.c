@@ -43,9 +43,17 @@ peer_t* peers_exist(const peers_t* self, const uuid_t uuid) {
 }
 
 int peers_add(peers_t* self, peer_t* peer) {
+  int i;
   if (peers_exist(self, peer_uuid(peer))) return 0;
 
   if (self->num_peers == MAX_NUM_PEERS) return -1;
+  for (i = 0; i < self->num_peers; i++) {
+    if (strcmp(peer_ip(self->peers[i]), peer_ip(peer)) == 0) {
+      peer_destroy(&self->peers[i]);
+      self->peers[i] = peer;
+      return 1;
+    }
+  }
   self->peers[self->num_peers++] = peer;
   return 1;
 }
